@@ -1,0 +1,187 @@
+// const PDFDocument = require("pdfkit");
+// const fs = require("fs");
+// const path = require("path");
+
+// exports.generateCertificate = async (user, course) => {
+//   return new Promise((resolve, reject) => {
+//     const doc = new PDFDocument({
+//       size: "A4",
+//       layout: "landscape",
+//       margins: { top: 50, bottom: 50, left: 72, right: 72 },
+//     });
+
+//     const certFolder = path.join(__dirname, "../certificates");
+//     if (!fs.existsSync(certFolder)) fs.mkdirSync(certFolder);
+
+//     const certPath = path.join(certFolder, `${user.name}-${course.title}.pdf`);
+//     const stream = fs.createWriteStream(certPath);
+//     doc.pipe(stream);
+
+//     // Background border
+//     doc
+//       .rect(20, 20, doc.page.width - 40, doc.page.height - 40)
+//       .stroke("#003366");
+
+//     doc
+//       .fontSize(36)
+//       .fillColor("#003366")
+//       .text("Certificate of Completion", { align: "center" })
+//       .moveDown(1.5);
+
+//     doc
+//       .fontSize(20)
+//       .fillColor("black")
+//       .text(`This certifies that`, { align: "center" })
+//       .moveDown(0.5);
+
+//     doc
+//       .fontSize(28)
+//       .fillColor("#000000")
+//       .text(`${user.name}`, { align: "center", underline: true })
+//       .moveDown(0.5);
+
+//     doc
+//       .fontSize(20)
+//       .text(`has successfully completed the course`, { align: "center" })
+//       .moveDown(0.5);
+
+//     doc
+//       .fontSize(26)
+//       .fillColor("#000000")
+//       .text(`"${course.title}"`, { align: "center", italics: true })
+//       .moveDown(1.5);
+
+//     doc
+//       .fontSize(16)
+//       .text(`Date: ${new Date().toLocaleDateString()}`, {
+//         align: "center",
+//       });
+
+//     // Optional: add instructor
+//     if (course.instructor && course.instructor.name) {
+//       doc
+//         .moveDown(0.5)
+//         .text(`Instructor: ${course.instructor.name}`, { align: "center" });
+//     }
+
+//     doc.end();
+
+//     stream.on("finish", () => {
+//       resolve(certPath); // return path
+//     });
+//     stream.on("error", reject);
+//   });
+// };
+const PDFDocument = require("pdfkit");
+const fs = require("fs");
+const path = require("path");
+
+exports.generateCertificate = async (user, course) => {
+  return new Promise((resolve, reject) => {
+    const doc = new PDFDocument({
+      size: "A4",
+      layout: "landscape",
+      margins: { top: 50, bottom: 50, left: 50, right: 50 },
+    });
+
+    const certFolder = path.join(__dirname, "../certificates");
+    if (!fs.existsSync(certFolder)) fs.mkdirSync(certFolder);
+
+    const certPath = path.join(certFolder, `${user.name}-${course.title}.pdf`);
+    const stream = fs.createWriteStream(certPath);
+    doc.pipe(stream);
+
+    // Add subtle background color
+    doc.rect(0, 0, doc.page.width, doc.page.height)
+       .fill("#fdfdfd"); 
+
+    // Draw elegant border
+    doc
+      .lineWidth(4)
+      .strokeColor("#2c3e50")
+      .rect(10, 10, doc.page.width - 20, doc.page.height - 20)
+      .stroke();
+
+    // Header logo or title
+    doc
+      .fillColor("#2c3e50")
+      .fontSize(28)
+      .font("Times-Bold")
+      .text("Seek.io", { align: "center", characterSpacing: 2 })
+      .moveDown(1);
+
+    // Main title
+    doc
+      .fontSize(40)
+      .fillColor("#34495e")
+      .font("Times-Bold")
+      .text("Certificate of Completion", { align: "center" })
+      .moveDown(1);
+
+    // Subtext
+    doc
+      .fontSize(20)
+      .fillColor("#2c3e50")
+      .font("Helvetica")
+      .text("This is to proudly certify that", { align: "center" })
+      .moveDown(0.5);
+
+    // Highlight student name
+    doc
+      .fontSize(34)
+      .fillColor("#000000")
+      .font("Times-Bold")
+      .text(user.name, { align: "center" })
+      .moveDown(0.5);
+
+    // Course info
+    doc
+      .fontSize(20)
+      .fillColor("#2c3e50")
+      .text(`has successfully completed the course`, { align: "center" })
+      .moveDown(0.5);
+
+    doc
+      .fontSize(26)
+      .fillColor("#000000")
+      .font("Times-Italic")
+      .text(`"${course.title}"`, { align: "center" })
+      .moveDown(1.5);
+
+    // Date and instructor section
+    const issueDate = new Date().toLocaleDateString();
+
+    doc
+      .fontSize(16)
+      .fillColor("#555555")
+      .text(`Date: ${issueDate}`, { align: "center" })
+      .moveDown(0.3);
+
+    if (course.instructor && course.instructor.name) {
+      doc
+        .fontSize(16)
+        .fillColor("#555555")
+        .text(`Instructor: ${course.instructor.name}`, { align: "center" })
+        .moveDown(1);
+    }
+
+    // Signature placeholder
+    doc
+      .moveDown(1)
+      .fontSize(14)
+      .fillColor("#000000")
+      .text("_________________________", { align: "right" })
+      .text("Authorized Signature", { align: "right" });
+
+    // Footer text
+    doc
+      .fontSize(10)
+      .fillColor("#aaaaaa")
+      .text("Generated by Seek.io LMS", 50, doc.page.height - 40, { align: "center" });
+
+    doc.end();
+
+    stream.on("finish", () => resolve(certPath));
+    stream.on("error", reject);
+  });
+};
